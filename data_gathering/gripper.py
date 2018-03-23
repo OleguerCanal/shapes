@@ -8,6 +8,7 @@ import time
 import sensor_msgs.msg
 from ik.roshelper import ROS_Wait_For_Msg
 from ik.roshelper import *
+# from ik.helper import *
 
 class NoGripperException(Exception):
     pass

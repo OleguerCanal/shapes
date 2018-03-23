@@ -1,5 +1,6 @@
 from data_collector import DataCollector
 from gripper import *
+from ik.helper import *
 from visualization_msgs.msg import *
 from robot_comm.srv import *
 from visualization_msgs.msg import *
@@ -12,6 +13,8 @@ import time
 
 class ControlRobot():
     def __init__(self):
+        rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
+
         pass
 
     def move_cart_mm(self, dx=0, dy=0, dz=0):
@@ -29,33 +32,55 @@ class ControlRobot():
     def open_gripper(self):
         open(speed=100)
 
-    def palpate(self, speed=40, force_list=[3, 6, 10], save=False, path=''):
-        dc = DataCollector
-
+    def palpate(self, speed=40, force_list=[10, 20, 30], save=False, path=''):
         # 0. We create the directory
-        if not os.path.exists(path): # If the directory does not exist, we create it
+        if save is True and not os.path.exists(path): # If the directory does not exist, we create it
             os.makedirs(path)
 
         # 1. We get and save the cartesian coord.
+        dc = DataCollector()
         cart = dc.getCart()
-        np.save(path + 'cart.npy', cart)
+        if save is True:
+            np.save(path + '/cart.npy', cart)
 
         # 2. We get wsg forces and gs images at every set force and store them
         i = 0
         for force in force_list:
-            self.close_gripper_f(grasp_speed=speed, grasp_force=force_list.pop(0))
-            if i == 0:
-                time.delay(3) # More distance to cover
-            else:
-                time.delay(1)
-            dc.get_data(get_cart=False, get_gs1=False, get_gs2=True, get_wsg=True, save=True, directory=path, iteration=i)
-            dc.save_data()
+            self.close_gripper_f(grasp_speed=speed, grasp_force=force)
+            print "Applying: " + str(force)
+            time.sleep(1.0)
+            dc.get_data(get_cart=False, get_gs1=True, get_gs2=False, get_wsg=True, save=save, directory=path, iteration=i)
+            self.open_gripper()
+            time.sleep(1.0)
             i += 1
 
-        def perfrom_experiment(self, experiment_name='test', movement_list=[]):
-            i = 0
-            for movement in movement_list:
-                pat = experiment_name + '/p_' + str(i) + '/'
-                self.palpate(speed=40, force_list=[3, 6, 10], save=True, path=path)
-                self.move_cart_mm(movement[0], movement[1], movement[2])
-                time.sleep(5)
+    def perfrom_experiment(self, experiment_name='test', movement_list=[]):
+        i = 0
+        if not os.path.exists(experiment_name): # If the directory does not exist, we create it
+            os.makedirs(experiment_name)
+        for movement in movement_list:
+            path = experiment_name + '/p_' + str(i) + '/'
+            self.palpate(speed=40, force_list=[10, 20, 40], save=True, path=path)
+            self.move_cart_mm(movement[0], movement[1], movement[2])
+            time.sleep(6)
+            i += 1
+        path = experiment_name + '/p_' + str(i) + '/'
+        self.palpate(speed=40, force_list=[10, 20, 40], save=True, path=path)
+
+
+if __name__ == "__main__":
+    cr = ControlRobot()
+    #cr.close_gripper_f(grasp_speed=40, grasp_force=10)
+    #print 1
+    #time.sleep(1)
+    #cr.close_gripper_f(grasp_speed=40, grasp_force=15)
+    #print 2
+    #time.sleep(1)
+    #cr.close_gripper_f(grasp_speed=40, grasp_force=20)
+    #print 3
+    #time.sleep(1)
+
+    #cr.move_cart_mm(dx=5, dy=0, dz=0)
+    #cr.palpate(speed=40, force_list=[10, 20, 30], save=True, path='air_palpate_test')
+    cr.move_cart_mm(0, -200, 0)
+    print 'done!'
