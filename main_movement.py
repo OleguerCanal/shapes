@@ -4,7 +4,7 @@ from data_gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "demo_video"
+    experiment_name = "datasets/demo_video"
     d = 35
     dv = 15
     movement_list = [

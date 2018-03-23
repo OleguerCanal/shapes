@@ -60,12 +60,20 @@ class DataCollector():
     def __save_data(self, get_gs1=False, get_gs2=True, get_wsg=True, directory='', iteration=0):
         if not os.path.exists(directory): # If the directory does not exist, we create it
             os.makedirs(directory)
-        if get_wsg is True:
-            self.__save(directory, self.data_recorded['wsg_driver'], 'wsg_'+ str(iteration))
-        if get_gs1 is True:
-            cv2.imwrite(directory+'/GS1_0' + str(iteration) + '.png', self.data_recorded['gs_image'])
-        if get_gs2 is True:
-            cv2.imwrite(directory+'/GS2_0' + str(iteration) + '.png', self.data_recorded['gs_image2'])
+        if iteration != -1:
+            if get_wsg is True:
+                self.__save(directory, self.data_recorded['wsg_driver'], 'wsg_'+ str(iteration))
+            if get_gs1 is True:
+                cv2.imwrite(directory+'/GS1_' + str(iteration) + '.png', self.data_recorded['gs_image'])
+            if get_gs2 is True:
+                cv2.imwrite(directory+'/GS2_' + str(iteration) + '.png', self.data_recorded['gs_image2']
+        else:
+            if get_wsg is True:
+                self.__save(directory, self.data_recorded['wsg_driver'], 'wsg'
+            if get_gs1 is True:
+                cv2.imwrite(directory+'/GS1.png', self.data_recorded['gs_image'])
+            if get_gs2 is True:
+                cv2.imwrite(directory+'/GS2.png', self.data_recorded['gs_image2'])
 
 
     def get_data(self, get_cart=False, get_gs1=False, get_gs2=True, get_wsg=True, save=True, directory='', iteration=0):
