@@ -4,16 +4,18 @@ from data_gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "air_test"
+    experiment_name = "demo_video"
+    d = 35
+    dv = 15
     movement_list = [
-        [-10, 0, 0],
-        [-10, 0, 0]#,
-        # [0, 0, 10],
-        # [10, 0, 0],
-        # [10, 0, 0],
-        # [0, 0, 10],
-        # [-10, 0, 0],
-        # [-10, 0, 0]
+        [-d, 0, 0],
+        [-d, 0, 0],
+        [0, 0, dv],
+        [d, 0, 0],
+        [d, 0, 0],
+        [0, 0, dv],
+        [-d, 0, 0],
+        [-d, 0, 0]
     ]
 
     cr = ControlRobot()

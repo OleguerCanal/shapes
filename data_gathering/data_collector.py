@@ -15,18 +15,20 @@ import time
 
 
 class DataCollector():
-    def __init__():
+    def __init__(self):
         self.bridge = CvBridge()
 
     def __save(self, path, obj, name):
+        if not os.path.exists(path): # If the directory does not exist, we create it
+            os.makedirs(path)
         with open(path + '/' + name + '.pkl', 'wb') as f:
             pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
     def __callback(self, data, key):
         self.subscribers[key].unregister()
-        if topic_dict[key]['msg_format'] == Image:
+        if self.topic_dict[key]['msg_format'] == Image:
             try:
-                cv2_img = bridge.imgmsg_to_cv2(data, 'rgb8')
+                cv2_img = self.bridge.imgmsg_to_cv2(data, 'rgb8')
             except CvBridgeError, e:
                 print(e)
             self.data_recorded[key] = cv2_img
@@ -55,13 +57,15 @@ class DataCollector():
             print '[Robot] Robot seeems not connected, skipping setCart()'
             return False
 
-    def __save_data(self, get_gs1=False, get_gs2=True, get_wsg=True, directory, iteration):
+    def __save_data(self, get_gs1=False, get_gs2=True, get_wsg=True, directory='', iteration=0):
+        if not os.path.exists(directory): # If the directory does not exist, we create it
+            os.makedirs(directory)
         if get_wsg is True:
-            self.__save(directory, data_recorded['wsg_driver'], 'wsg_'+ str(iteration))
+            self.__save(directory, self.data_recorded['wsg_driver'], 'wsg_'+ str(iteration))
         if get_gs1 is True:
-            cv2.imwrite(directory+'/GS1_0' + str(iteration) + '.png', data_recorded['gs_image'])
+            cv2.imwrite(directory+'/GS1_0' + str(iteration) + '.png', self.data_recorded['gs_image'])
         if get_gs2 is True:
-            cv2.imwrite(directory+'/GS2_0' + str(iteration) + '.png', data_recorded['gs_image2'])
+            cv2.imwrite(directory+'/GS2_0' + str(iteration) + '.png', self.data_recorded['gs_image2'])
 
 
     def get_data(self, get_cart=False, get_gs1=False, get_gs2=True, get_wsg=True, save=True, directory='', iteration=0):
@@ -76,19 +80,19 @@ class DataCollector():
             'gs_image2': {'topic': 'rpi/gelsight/flip_raw_image2', 'msg_format': Image}}
         if get_wsg is False:
             self.topic_dict.pop('wsg_driver', None)
-        if gs_image is False:
+        if get_gs1 is False:
             self.topic_dict.pop('gs_image', None)
-        if gs_image2 is False:
+        if get_gs2 is False:
             self.topic_dict.pop('gs_image2', None)
 
         self.data_recorded = {}
         self.subscribers = {}
 
-        rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
+        # rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
         for key in self.topic_dict:
             topic = self.topic_dict[key]['topic']
             msg_format = self.topic_dict[key]['msg_format']
-            self.subscribers[key] = rospy.Subscriber(topic, msg_format, __callback, key)
+            self.subscribers[key] = rospy.Subscriber(topic, msg_format, self.__callback, key)
         time.sleep(0.5) # We whait for 0.5 seconds
 
         # 3. We save things
