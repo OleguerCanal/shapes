@@ -55,6 +55,12 @@ class ControlRobot():
             i += 1
 
     def perfrom_experiment(self, experiment_name='test', movement_list=[]):
+        # 1. We save the background image:
+        dc = DataCollector()
+        dc.get_data(get_cart=False, get_gs1=True, get_gs2=True, get_wsg=False, save=True, directory=experiment_name+'/air', iteration=-1)
+
+
+        # 2. We perfomr the experiment:
         i = 0
         if not os.path.exists(experiment_name): # If the directory does not exist, we create it
             os.makedirs(experiment_name)

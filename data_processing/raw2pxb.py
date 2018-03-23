@@ -9,14 +9,19 @@ class RAW2PXB():
     def __init__(self):
         pass
 
-    def show_image(self, img1, img2):
+    def show_image(self, img):
+        fig = plt.figure()
+        plt.imshow(img.astype(np.uint8), cmap='gray')
+        plt.show()
+
+    def show_2images(self, img1, img2):
         fig = plt.figure()
         a = fig.add_subplot(1,2,1)
-        plt.imshow(img1.astype(np.uint8))
+        plt.imshow(img1.astype(np.uint8), cmap='gray')
         a.set_title('Before')
 
         a = fig.add_subplot(1,2,2)
-        plt.imshow(img2.astype(np.uint8))
+        plt.imshow(img2.astype(np.uint8), cmap='gray')
         a.set_title('After')
         plt.show()
 
@@ -42,12 +47,12 @@ class RAW2PXB():
     def __contact_detection(self, im, low_bar, high_bar):
         background = cv2.GaussianBlur(im.astype(np.float32),(25,25),15)
         im_sub = im/background*70
-        self.show_image(background, im_sub)
+        # self.show_image(background, im_sub)
         im_gray = self.rgb2gray(im_sub).astype(np.uint8)
         im_canny = cv2.Canny(im_gray, low_bar, high_bar)
-        kernal1 = self.__make_kernal(10) # How big we connect the islands into a big island (k1 <= k2)
-        kernal2 = self.__make_kernal(15) #
-        kernal3 = self.__make_kernal(70)
+        kernal1 = self.__make_kernal(7) # How big we connect the islands into a big island (k1 <= k2)
+        kernal2 = self.__make_kernal(20) #
+        kernal3 = self.__make_kernal(20)
         img_d = cv2.dilate(im_canny, kernal1, iterations=1)
         img_e = cv2.erode(img_d, kernal1, iterations=1)
         img_ee = cv2.erode(img_e, kernal2, iterations=1)
@@ -76,7 +81,7 @@ class RAW2PXB():
         contact2 = self.__contact_detection(im_crop1, 20, 60)
         return im_crop0, im_crop1, contact2, im_crop1.astype(np.uint8) + contact2/10
 
-    def crop_contact(self, img_back, img_grasp, gel_id=1, is_zeros=True, compress_factor=1):
+    def crop_contact(self, img_back, img_grasp, gel_id=1, compress_factor=1, is_zeros=True):
         if gel_id == 1:
             background, im1, contact, patch = self.__contact_detection1(img_back, img_grasp)
         else:
@@ -99,11 +104,38 @@ class RAW2PXB():
     def resize_image(self, img, factor):
         return cv2.resize(img, (0, 0), fx=factor, fy=factor)
 
+    def multiple_image_processing(self, gel_id, img_back, img_list, force_list, layer_var=50, max_f_offset=100):
+        def get_heights():
+            m = (205-max_f_offset)/max(force_list)
+            heights = []
+            for force in force_list:
+                heights.append(205-m*force)
+            return heights
+
+        def add_layer(base_layer, top_layer, height, layer_var):
+            for i in range(top_layer.shape[0]):
+                for j in range(top_layer.shape[1]):
+                    if top_layer[i][j] != 0:
+                        new_pixel = int(height + top_layer[i][j]*float(layer_var)/255.0)
+                        base_layer[i][j] = max(new_pixel, base_layer[i][j])
+            return base_layer
+
+        heights = get_heights()
+        no_back = self.crop_contact(img_back=img_back, img_grasp=img_list[0], gel_id=gel_id)
+        base_layer = np.zeros(no_back.shape)
+        for img, height in zip(img_list, heights):
+            no_back = self.crop_contact(img_back=img_back, img_grasp=img, gel_id=gel_id)
+            base_layer = add_layer(base_layer, no_back, height, layer_var)
+
+        blur = cv2.GaussianBlur(base_layer, (5, 5), 50)
+        blur = self.resize_image(blur, 0.2)
+        return blur
 
 if __name__ == "__main__":
-    gs = cv2.imread('sample_data/p2/gs_image2.png')
-    gs_back = cv2.imread('sample_data/arc/gs_image2.png')
-
-    r2p = RAW2PXB()
-    no_back = r2p.crop_contact(gs_back, gs, gel_id=2, compress_factor=0.2)
-    r2p.show_image(img1=gs, img2=no_back)
+    # gs = cv2.imread('sample_data/p2/gs_image2.png')
+    # gs_back = cv2.imread('sample_data/arc/gs_image2.png')
+    #
+    # r2p = RAW2PXB()
+    # no_back = r2p.crop_contact(gs_back, gs, gel_id=2, compress_factor=0.2)
+    # r2p.show_image(img1=gs, img2=no_back)
+    pass
