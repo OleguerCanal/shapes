@@ -4,16 +4,11 @@ from data_gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "datasets/demo_video"
-    d = 35
-    dv = 15
+    experiment_name = "datasets/demo_video_1_back"
+    d = 30
     movement_list = [
         [-d, 0, 0],
         [-d, 0, 0],
-        [0, 0, dv],
-        [d, 0, 0],
-        [d, 0, 0],
-        [0, 0, dv],
         [-d, 0, 0],
         [-d, 0, 0]
     ]

@@ -57,8 +57,8 @@ class ControlRobot():
     def perfrom_experiment(self, experiment_name='test', movement_list=[]):
         # 1. We save the background image:
         dc = DataCollector()
-        dc.get_data(get_cart=False, get_gs1=True, get_gs2=True, get_wsg=False, save=True, directory=experiment_name+'/air', iteration=-1)
-
+        dc.get_data(get_cart=False, get_gs1=True, get_gs2=False, get_wsg=False, save=True, directory=experiment_name+'/air', iteration=-1)
+        print "Air data gathered"
 
         # 2. We perfomr the experiment:
         i = 0
@@ -66,16 +66,17 @@ class ControlRobot():
             os.makedirs(experiment_name)
         for movement in movement_list:
             path = experiment_name + '/p_' + str(i) + '/'
-            self.palpate(speed=40, force_list=[10, 20, 40], save=True, path=path)
+            self.palpate(speed=40, force_list=[5, 25, 40], save=True, path=path)
             self.move_cart_mm(movement[0], movement[1], movement[2])
             time.sleep(6)
             i += 1
         path = experiment_name + '/p_' + str(i) + '/'
-        self.palpate(speed=40, force_list=[10, 20, 40], save=True, path=path)
+        self.palpate(speed=40, force_list=[5, 25, 40], save=True, path=path)
 
 
 if __name__ == "__main__":
     cr = ControlRobot()
+    #cr.close_gripper_f()
     #cr.close_gripper_f(grasp_speed=40, grasp_force=10)
     #print 1
     #time.sleep(1)
@@ -88,5 +89,5 @@ if __name__ == "__main__":
 
     #cr.move_cart_mm(dx=5, dy=0, dz=0)
     #cr.palpate(speed=40, force_list=[10, 20, 30], save=True, path='air_palpate_test')
-    cr.move_cart_mm(0, -200, 0)
+    cr.move_cart_mm(0, 0, 10)
     print 'done!'
