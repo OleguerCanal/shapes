@@ -35,8 +35,8 @@ class Location():
             c=pointcloud['y'], cmap='Blues')
 
         # Set viewpoint.
-        ax.azim = 60
-        ax.elev = 30
+        ax.azim = 135
+        ax.elev = 15
 
         # Label axes.
         ax.set_xlabel('x (mm)')
@@ -53,6 +53,7 @@ class Location():
                 getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
 
         axisEqual3D(ax)
+        plt.gca().invert_xaxis()
         plt.show()
 
     def translate_pointcloud(self, pointcloud, v):
@@ -127,7 +128,7 @@ class Location():
                     img_back=gs1_back,
                     img_list=gs1_list,
                     force_list=force_list)
-                # r2p.show_image(gs1_list[-1][:-80, 40:-50], height_map)
+                r2p.show_2images(gs1_list[0][:-80, 40:-50], height_map)
             elif gs_id == 2:
                 height_map = r2p.multiple_image_processing(
                     gel_id=gs_id,
@@ -135,7 +136,7 @@ class Location():
                     img_list=gs2_list,
                     force_list=force_list)
 
-        r2p.show_image(img=height_map)
+        # r2p.show_image(img=height_map)
 
         self.params['px2mm_params']['img_height'] = height_map.shape[0]
         self.params['px2mm_params']['img_width'] = height_map.shape[1]

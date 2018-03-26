@@ -34,11 +34,11 @@ def load_obj(path):
         return pickle.load(f)
 
 if __name__ == "__main__":
-    directory = 'datasets/demo_video'
+    directory = 'datasets/demo_video_1'
     global_pointcloud = {'x': [], 'y': [], 'z': []}
 
-    for i in range(3):
-        exp = str(i+4)
+    for i in range(6):
+        exp = str(i)
         cart = get_cart(directory + '/p_' + exp + '/cart.npy')
         wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
         loc = Location()
@@ -48,12 +48,10 @@ if __name__ == "__main__":
             opening=wsg['width'],
             from_heightmap=True,
             directory=directory,
-            num=i+4)
+            num=i)
         loc.visualize_pointcloud(local_pointcloud)
         global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
-    loc.visualize_pointcloud(global_pointcloud)
-#
-
+        loc.visualize_pointcloud(global_pointcloud)
 
     # path = 'data_processing/sample_data/'
     # gs_back = cv2.imread(path + 'arc/gs_image.png')
