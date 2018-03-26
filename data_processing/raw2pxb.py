@@ -45,11 +45,13 @@ class RAW2PXB():
         return img
 
     def __contact_detection(self, im, low_bar, high_bar):
+        print low_bar, high_bar
         background = cv2.GaussianBlur(im.astype(np.float32),(25,25),15)
         im_sub = im/background*70
         # self.show_image(background, im_sub)
         im_gray = self.rgb2gray(im_sub).astype(np.uint8)
         im_canny = cv2.Canny(im_gray, low_bar, high_bar)
+        # self.show_image(im_canny)
         kernal1 = self.__make_kernal(7) # How big we connect the islands into a big island (k1 <= k2)
         kernal2 = self.__make_kernal(20) #
         kernal3 = self.__make_kernal(20)
@@ -63,7 +65,7 @@ class RAW2PXB():
     def __contact_detection1(self, im0, im1):
         im_crop0 = im0[:-80, 40:-50]
         im_crop1 = im1[:-80, 40:-50]
-        contact = self.__contact_detection(im_crop1,20,60)
+        contact = self.__contact_detection(im_crop1, 20, 60)
         return im_crop0, im_crop1, contact, im_crop1.astype(np.uint8) + contact/10
 
     def __contact_detection2(self, im0, im1):
@@ -130,12 +132,13 @@ class RAW2PXB():
         blur = cv2.GaussianBlur(base_layer, (5, 5), 50)
         blur = self.resize_image(blur, 0.2)
         return blur
+        # return cv2.flip(blur, 1)
 
 if __name__ == "__main__":
-    # gs = cv2.imread('sample_data/p2/gs_image2.png')
-    # gs_back = cv2.imread('sample_data/arc/gs_image2.png')
+    gs = cv2.imread('sample_data/GS1_2.png')
+    gs_back = cv2.imread('sample_data/arc/gs_image2.png')
     #
-    # r2p = RAW2PXB()
-    # no_back = r2p.crop_contact(gs_back, gs, gel_id=2, compress_factor=0.2)
-    # r2p.show_image(img1=gs, img2=no_back)
+    r2p = RAW2PXB()
+    no_back = r2p.crop_contact(gs_back, gs, gel_id=1, compress_factor=0.2)
+    r2p.show_2images(img1=gs[:-80, 40:-50], img2=no_back)
     pass
