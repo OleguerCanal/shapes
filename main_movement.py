@@ -4,13 +4,14 @@ from data_gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "datasets/demo_video_1_back"
-    d = 30
+    experiment_name = "datasets/pos_calibration"
+    d = 10
     movement_list = [
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0]
+        [0, -d, 0],
+        [0, -d, 0],
+        [0, 0, d],
+        [0, d, 0],
+        [0, d, 0]
     ]
 
     cr = ControlRobot()
