@@ -25,7 +25,8 @@ class DataCollector():
             pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
     def __callback(self, data, key):
-        self.subscribers[key].unregister()
+        self.subscribers[key].unregister() # Comment to record during indefinite time
+        print "#################################################"
         if self.topic_dict[key]['msg_format'] == Image:
             try:
                 cv2_img = self.bridge.imgmsg_to_cv2(data, 'rgb8')
@@ -43,6 +44,9 @@ class DataCollector():
             data_dict['force_finger0'] = ws50message.force_finger0
             data_dict['force_finger1'] = ws50message.force_finger1
             self.data_recorded[key] = data_dict
+            # print "Total Force: " + str(data_dict['force'])
+            # print "Finger 1: " + str(data_dict['force_finger0']
+            # print "Finger 2: " + str(data_dict['force_finger1']
         return
 
     def getCart(self):
@@ -98,6 +102,7 @@ class DataCollector():
 
         # rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
         for key in self.topic_dict:
+            print key
             topic = self.topic_dict[key]['topic']
             msg_format = self.topic_dict[key]['msg_format']
             self.subscribers[key] = rospy.Subscriber(topic, msg_format, self.__callback, key)
@@ -106,3 +111,9 @@ class DataCollector():
         # 3. We save things
         if save is True:
             self.__save_data(get_gs1=get_gs1, get_gs2=get_gs2, get_wsg=get_wsg, directory=directory, iteration=iteration)
+
+
+if __name__ == "__main__":
+    dc = DataCollector()
+    dc.get_data(get_cart=False, get_gs1=False, get_gs2=False, get_wsg=True, save=False, directory='', iteration=0)
+    time.sleep(5)

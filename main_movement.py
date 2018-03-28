@@ -4,7 +4,7 @@ from data_gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "datasets/pos_calibration_squares"
+    experiment_name = "datasets/gripper_force_test"
     d = 5
     movement_list = [
         [d, 0, 0],
