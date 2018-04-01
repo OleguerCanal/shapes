@@ -1,5 +1,5 @@
-from data_gathering.control_robot import ControlRobot
-from data_gathering.data_collector import DataCollector
+from gathering.control_robot import ControlRobot
+from gathering.data_collector import DataCollector
 
 
 if __name__ == "__main__":
