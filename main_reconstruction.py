@@ -1,6 +1,7 @@
 import math, cv2, os, pickle
-from data_processing.location import Location
-from data_processing.raw2pxb import RAW2PXB
+from processing.location import Location
+from processing.raw2pxb import RAW2PXB
+from processing.icp import *
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -33,12 +34,28 @@ def load_obj(path):
     with open(path, 'rb') as f:
         return pickle.load(f)
 
+def dictPC2npPC(pointcloud):
+    mat = []
+    for i in range(len(pointcloud['x'])):
+        a = np.asarray([pointcloud['x'][i], pointcloud['y'][i], pointcloud['z'][i]])
+        mat.append(a)
+    return np.asarray(mat)
+
+def npPC2dictPC(np_pointcloud):
+    pointcloud = {'x': [], 'y': [], 'z': []}
+    for i in range(np_pointcloud.shape[0]):
+        pointcloud['x'].append(np_pointcloud[i][0])
+        pointcloud['y'].append(np_pointcloud[i][1])
+        pointcloud['z'].append(np_pointcloud[i][2])
+    return pointcloud
+
 if __name__ == "__main__":
     directory = 'datasets/demo_video_1'
-    global_pointcloud = {'x': [], 'y': [], 'z': []}
+    # global_pointcloud = {'x': [], 'y': [], 'z': []}
+    global_pointcloud = None
 
-    for i in range(6):
-        exp = str(i)
+    for i in range(2):
+        exp = str(i+1)
         cart = get_cart(directory + '/p_' + exp + '/cart.npy')
         wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
         loc = Location()
@@ -48,10 +65,15 @@ if __name__ == "__main__":
             opening=wsg['width'],
             from_heightmap=True,
             directory=directory,
-            num=i)
+            num=i+1)
         loc.visualize_pointcloud(local_pointcloud)
-        global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
-        loc.visualize_pointcloud(global_pointcloud)
+        local_pointcloud = dictPC2npPC(local_pointcloud)
+        if global_pointcloud is None:
+            global_pointcloud = local_pointcloud
+        else:
+            global_pointcloud, distances, iterations = icp(global_pointcloud, local_pointcloud, tolerance=0.000001)
+        # global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
+        loc.visualize_pointcloud(npPC2dictPC(global_pointcloud))
 
     # path = 'data_processing/sample_data/'
     # gs_back = cv2.imread(path + 'arc/gs_image.png')
