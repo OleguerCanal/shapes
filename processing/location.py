@@ -128,15 +128,14 @@ class Location():
                     img_back=gs1_back,
                     img_list=gs1_list,
                     force_list=force_list)
-                r2p.show_2images(gs1_list[0][:-80, 40:-50], height_map)
+                # r2p.show_2images(gs1_list[0][:-80, 40:-50], height_map)
             elif gs_id == 2:
                 height_map = r2p.multiple_image_processing(
                     gel_id=gs_id,
                     img_back=gs2_back,
                     img_list=gs2_list,
                     force_list=force_list)
-
-        # r2p.show_image(img=height_map)
+                # r2p.show_image(img=height_map)
 
         self.params['px2mm_params']['img_height'] = height_map.shape[0]
         self.params['px2mm_params']['img_width'] = height_map.shape[1]
