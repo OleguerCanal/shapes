@@ -66,12 +66,12 @@ class ControlRobot():
             os.makedirs(experiment_name)
         for movement in movement_list:
             path = experiment_name + '/p_' + str(i) + '/'
-            self.palpate(speed=40, force_list=[5, 25, 40], save=True, path=path)
+            self.palpate(speed=40, force_list=[1, 10, 20, 40], save=True, path=path)
             self.move_cart_mm(movement[0], movement[1], movement[2])
             time.sleep(6)
             i += 1
         path = experiment_name + '/p_' + str(i) + '/'
-        self.palpate(speed=40, force_list=[5, 25, 40], save=True, path=path)
+        self.palpate(speed=40, force_list=[1, 10, 20, 40], save=True, path=path)
 
 
 if __name__ == "__main__":
