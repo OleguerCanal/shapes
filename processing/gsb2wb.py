@@ -70,7 +70,7 @@ class GSB2WB():
     #     return pointcloud
 
     def get_wb_pointcloud(self, pointcloud, quaternion, gripper_point_2_gs_origin=0):
-        print quaternion
+        # print quaternion
         grb_pointcloud = self.__gsb2grb(pointcloud, gripper_point_2_gs_origin)
         # self.visualize_pointcloud(grb_pointcloud)
         # grb_pointcloud = {'x': [1, 0, 0], 'y': [0, 1, 0], 'z': [0, 0, 1]}
