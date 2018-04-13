@@ -1,4 +1,4 @@
-import math, cv2, os, pickle, scipy.io
+import math, cv2, os, pickle, scipy.io, pypcd, subprocess
 from processing.location import Location
 from processing.raw2pxb import RAW2PXB
 from processing.icp import *
@@ -8,8 +8,6 @@ from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from numpy.linalg import inv
-import pypcd
-
 
 def cout(cart, wsg):
     x = []
@@ -56,12 +54,38 @@ def get_string_pc(pointcloud):
         string += '\n' + str(elem[0]) + ' ' + str(elem[1]) + ' ' + str(elem[2])
     return string
 
+def load_cpl_pointcloud(path):
+    pass
+
+def stitch_pointclouds(fixed, moved):
+    # 1. We save the pointclouds in .pcd format
+    name = 'processing/c++/cloud' + str(0) + '.pcd'
+    with open(name, 'w') as f:
+        f.write(get_string_pc(fixed))
+
+    name = 'processing/c++/cloud' + str(1) + '.pcd'
+    with open(name, 'w') as f:
+        f.write(get_string_pc(moved))
+
+    # 2. We run the c++ program to stitch them
+    command = 'cd processing/c++/; ./pairwise_incremental_registration cloud[0-1].pcd'
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
+    process.wait()
+
+    # 3. We load and return the merged pointcloud
+    path = 'processing/c++/1.pcd'
+    pc = pypcd.PointCloud.from_path(path)
+    # pointcloud = npPC2dictPC(pc.pc_data)
+    return pc.pc_data
+
+
 if __name__ == "__main__":
-    directory = 'datasets/demo_video_1'
+    directory = 'datasets/stitching_dataset'
 
     global_pointcloud = None
-    for i in range(3):
-        exp = str(i+1)
+    processed_global_pointcloud = None
+    for i in range(5):
+        exp = str(i)
         cart = get_cart(directory + '/p_' + exp + '/cart.npy')
         wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
         loc = Location()
@@ -71,86 +95,24 @@ if __name__ == "__main__":
             opening=wsg['width'],
             from_heightmap=True,
             directory=directory,
-            num=i+1)
-        loc.visualize_pointcloud(local_pointcloud)
-        local_pointcloud_arr = dictPC2npPC(local_pointcloud)
-        # scipy.io.savemat('processing/sample_data/arrdata'+ str(i+2) +'.mat', mdict={'arr': local_pointcloud})
+            num=i)
 
-        # Save in local_pointcloud format
-        # cloud = pcl.PointCloud()
-        # cloud.from_array(local_pointcloud)
-        # pcl.save(cloud, 'processing/c++/cloud' + str(i+2) + '.pcd', format = 'pcd')
-        # print local_pointcloud
-        # pc = pypcd.PointCloud.from_array(local_pointcloud_arr)
-        # pc.data = dictPC2npPC(local_pointcloud, form=False)
-        # pc.save('processing/c++/cloud' + str(i+2) + '.pcd')
+        local_pointcloud_arr = dictPC2npPC(local_pointcloud)
+
         if global_pointcloud is None:
-            global_pointcloud = local_pointcloud
+            global_pointcloud = local_pointcloud                # Dict format
+            processed_global_pointcloud = local_pointcloud_arr  # Numpy format
         else:
             global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
+            processed_global_pointcloud = stitch_pointclouds(processed_global_pointcloud, local_pointcloud_arr)
 
-        name = 'processing/c++/cloud' + str(i+5) + '.pcd'
-        with open(name, 'w') as f:
-            f.write(get_string_pc(local_pointcloud_arr))
+        # print(type(global_pointcloud))
+        # print(type(processed_global_pointcloud))
+        loc.visualize_pointcloud(local_pointcloud)
+        loc.visualize_pointcloud(global_pointcloud)
+        loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
+
+    print "DONE :)"
 
     loc.visualize_pointcloud(global_pointcloud)
-    # Pyhton built PointCloud
-    # global_pointcloud = None
-    #
-    # for i in range(2):
-    #     exp = str(i+1)
-    #     cart = get_cart(directory + '/p_' + exp + '/cart.npy')
-    #     wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
-    #     loc = Location()
-    #     local_pointcloud = loc.get_local_pointcloud(
-    #         gs_id=1,
-    #         loc=cart,
-    #         opening=wsg['width'],
-    #         from_heightmap=True,
-    #         directory=directory,
-    #         num=i+1)
-    #     loc.visualize_pointcloud(local_pointcloud)
-    #     local_pointcloud = dictPC2npPC(local_pointcloud)
-    #     if global_pointcloud is None:
-    #         global_pointcloud = local_pointcloud
-    #     else:
-    #         global_pointcloud, distances, iterations = icp(global_pointcloud, local_pointcloud, tolerance=0.000001)
-    #     # global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
-    #     loc.visualize_pointcloud(npPC2dictPC(global_pointcloud))
-
-    # path = 'data_processing/sample_data/'
-    # gs_back = cv2.imread(path + 'arc/gs_image.png')
-    # gs2_back = cv2.imread(path + 'arc/gs_image2.png')
-    #
-    # global_pointcloud = {'x': [], 'y': [], 'z': []}
-    # for i in range(3):
-    #     exp = str(i+1)
-    #     gs2 = cv2.imread(path + 'p' + exp + '/gs_image2.png')
-    #     cart = get_cart(path + 'p' + exp + '/cart.npy')
-    #     wsg = load_obj(path + 'p' + exp + '/wsg.pkl')
-    #     loc = Location()
-    #     local_pointcloud = loc.get_local_pointcloud(
-    #         gs_img=gs2,
-    #         gs_back=gs2_back,
-    #         gs_id=2,
-    #         loc=cart,
-    #         opening=wsg['width'])
-    #     # loc.visualize_pointcloud(local_pointcloud)
-    #     global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
-    #
-    # for i in range(3):
-    #     exp = str(i+1)
-    #     gs = cv2.imread(path + 'p' + exp + '/gs_image.png')
-    #     cart = get_cart(path + 'p' + exp + '/cart.npy')
-    #     wsg = load_obj(path + 'p' + exp + '/wsg.pkl')
-    #     loc = Location()
-    #     local_pointcloud = loc.get_local_pointcloud(
-    #         gs_img=gs,
-    #         gs_back=gs2_back,
-    #         gs_id=1,
-    #         loc=cart,
-    #         opening=wsg['width'])
-    #     # loc.visualize_pointcloud(local_pointcloud)
-    #     global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
-    #
-    # loc.visualize_pointcloud(global_pointcloud)
+    loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
