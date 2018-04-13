@@ -45,7 +45,7 @@ class RAW2PXB():
         return img
 
     def __contact_detection(self, im, low_bar, high_bar):
-        print low_bar, high_bar
+        # print low_bar, high_bar
         background = cv2.GaussianBlur(im.astype(np.float32),(25,25),15)
         im_sub = im/background*70
         # self.show_image(background, im_sub)

@@ -85,6 +85,7 @@ if __name__ == "__main__":
     global_pointcloud = None
     processed_global_pointcloud = None
     for i in range(5):
+        print "Processing img " + str(i) + "..."
         exp = str(i)
         cart = get_cart(directory + '/p_' + exp + '/cart.npy')
         wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
@@ -106,11 +107,10 @@ if __name__ == "__main__":
             global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
             processed_global_pointcloud = stitch_pointclouds(processed_global_pointcloud, local_pointcloud_arr)
 
-        # print(type(global_pointcloud))
         # print(type(processed_global_pointcloud))
-        loc.visualize_pointcloud(local_pointcloud)
-        loc.visualize_pointcloud(global_pointcloud)
-        loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
+        # loc.visualize_pointcloud(local_pointcloud)
+        # loc.visualize_pointcloud(global_pointcloud)
+        # loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
 
     print "DONE :)"
 
