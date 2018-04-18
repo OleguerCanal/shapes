@@ -2,6 +2,7 @@ import cv2, math
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.optimize import minimize
 
 class PosCalib():
     def __init__(self):
@@ -29,8 +30,11 @@ class PosCalib():
         mc = []
         vect = []
 
-        mc = [[30.467741935483787, 93.693548387096769, 285.95161290322574, 511.75806451612902], [17.564516129032086, 213.6935483870968, 305.30645161290317, 162.08064516129033], [195.6290322580644, 131.11290322580646, 291.11290322580635, 408.5322580645161], [11.112903225806349, 488.5322580645161, 176.27419354838702, 414.98387096774195]]
-        vect = [32.33, 21.31, 20.53, 13.08]
+        # mc = [[30.467741935483787, 93.693548387096769, 285.95161290322574, 511.75806451612902], [17.564516129032086, 213.6935483870968, 305.30645161290317, 162.08064516129033], [195.6290322580644, 131.11290322580646, 291.11290322580635, 408.5322580645161], [11.112903225806349, 488.5322580645161, 176.27419354838702, 414.98387096774195]]
+        # vect = [32.33, 21.31, 20.53, 13.08]
+
+        mc = [[30.467741935483787, 93.69354838709677, 285.95161290322574, 511.758064516129], [17.564516129032086, 213.6935483870968, 305.3064516129032, 162.08064516129033], [195.6290322580644, 131.11290322580646, 291.11290322580635, 408.5322580645161], [11.112903225806349, 488.5322580645161, 176.27419354838702, 414.98387096774195], [31.758064516128911, 100.14516129032259, 189.17741935483861, 242.08064516129033], [7.2419354838708614, 409.82258064516122, 186.5967741935483, 242.08064516129033], [193.04838709677409, 133.69354838709677, 296.27419354838702, 261.43548387096769], [186.5967741935483, 244.66129032258064, 291.11290322580635, 408.5322580645161]]
+        vect = [32.33, 21.31, 20.53, 13.08, 13.3, 15.84, 11.51, 14.3]
 
         # for i in range(4):
         #     x1, y1 = self.getCoord(img)
@@ -38,12 +42,31 @@ class PosCalib():
         #     x2, y2 = self.getCoord(img)
         #     print x2, y2
         #     real_dist = abs(float(raw_input("Enter real distance:")))
-        #     a, b, c, d, e = get_eq_coefs(x1, y1, x2, y2)
-        #     param_row = [a, c, b, d, e, b]
+        #     # a, b, c, d, e = get_eq_coefs(x1, y1, x2, y2)
+        #     # param_row = [a, c, b, d, e, b]
         #     coord_row = [x1, y1, x2, y2]
-        #     mat.append(param_row)
+        #     # mat.append(param_row)
         #     mc.append(coord_row)
         #     vect.append(real_dist)
+
+        self.mc = mc
+        self.dist = vect
+
+
+
+        def __sq_distance_aprox(params, x1, y1, x2, y2):
+            k1, k2, l1, l2 = params
+            # dist_x = x1*(k1*x1 + k2*y1) - x2*(k1*x2 + k2*y2)
+            # dist_y = y1*(l1*y1 + l2*x1) - y2*(l1*y2 + l2*x2)
+            dist_x = x1*(k1 + k2*y1) - x2*(k1 + k2*y2)
+            dist_y = y1*(l1 + l2*x1) - y2*(l1 + l2*x2)
+            return dist_x**2 + dist_y**2
+
+        def eq_sys(params):
+            dif = 0
+            for (x1, y1, x2, y2), distance in zip(self.mc, self.dist):
+                dif += abs(distance**2 - __sq_distance_aprox(params, x1, y1, x2, y2))
+            return dif
 
         def eq_system(params):
             k1, k2, l1, l2 = params
@@ -73,11 +96,16 @@ class PosCalib():
             return (f1, f2, f3, f4)
 
         print mc
-        print mc[0][1]
         print vect
-        params = (0.1, 1, 0.07, 1)
+        # params = (0.1, 1, 0.07, 1)
         # params = (10, 10.0, 10.0, 10.0)
-        k1, k2, l1, l2 = fsolve(eq_system2, params)
+        # k1, k2, l1, l2 = fsolve(eq_system2, params)
+
+        # As optimization problem
+        x0 = (0.2, .001, 0.2, .001)
+        res = minimize(eq_sys, x0, method='nelder-mead', options={'xtol': 1e-8, 'disp': True})
+        (k1, k2, l1, l2) = res.x
+
         return [k1, k2, l1, l2]
 
     def getCoord(self, img):
@@ -103,12 +131,13 @@ class DepthCalib():
 
 if __name__ == "__main__":
     pc = PosCalib()
-    path = 'sample_data/pos_calibration/GS1_sq_calib.png'
+    path = 'pos_calibration/GS1_sq_calib.png'
     cts = pc.get_px2mm_params(cv2.imread(path))
     # cts = [0.087504891478981175, -0.00012331405816522298, 0.010029617758599094, 0.00019075236567386814]
     x = 480
     y = 640
-    mm = ((cts[0] + cts[1]*y)*x , (cts[2] + cts[3]*x)*y)
+    print cts
+    mm = ((cts[0] + cts[1]*y)*x, (cts[2] + cts[3]*x)*y)
     print mm
     print math.sqrt(mm[0]**2 + mm[1]**2)
 

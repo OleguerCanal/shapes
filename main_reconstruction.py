@@ -1,7 +1,7 @@
 import math, cv2, os, pickle, scipy.io, pypcd, subprocess
 from processing.location import Location
 from processing.raw2pxb import RAW2PXB
-from processing.icp import *
+# from processing.icp import *
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from matplotlib import cm
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     global_pointcloud = None
     processed_global_pointcloud = None
-    for i in range(5):
+    for i in range(3):
         print "Processing img " + str(i) + "..."
         exp = str(i)
         cart = get_cart(directory + '/p_' + exp + '/cart.npy')
