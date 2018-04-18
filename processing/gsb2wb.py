@@ -15,6 +15,7 @@ class GSB2WB():
         self._EPS = 1e-5
         pass
 
+    # TODO: Tacke into account variation parameters
     def __gsb2grb(self, pointcloud, gripper_point_2_gs_origin):
         for i in range(len(pointcloud['x'])):
             x = -pointcloud['z'][i]

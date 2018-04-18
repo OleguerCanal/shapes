@@ -16,6 +16,10 @@ class PXB2GSB():
         x = x*params['gs_height']/float(params['img_height'])
         y = y*params['gs_width']/float(params['img_width'])
         return x, y
+        # k1, k2, l1, l2 = [0.073823915173035479, 9.926577535826757e-06, 0.060562277447977549, -4.4780153261919538e-06]
+        # fx = x*(k1 + k2*y)
+        # fy = y*(l1 + l2*x)
+        # return (fx, fy)
 
     # This function is also VEEEERY improvable
     def get_gsb_pointcloud(self, pxb_data, px2mm_params, opening, gs_id=1, max_height=3):
