@@ -97,15 +97,50 @@ class PosCalib():
             gripper_state = {}
             gripper_state['pos'] = cart[0:3]
             gripper_state['quaternion'] = cart[-4:]
-            gripper_state['Dh'] = wsg_list[0]['width']
-            gripper_state['Dv'] = 139.8 + 72.5 + 160 # Base + wsg + finger
+            gripper_state['Dx'] = wsg_list[0]['width']
+            gripper_state['Dz'] = 139.8 + 72.5 + 160 # Base + wsg + finger
+
+            gs_point_list = [
+                (31.758064516128911, 96.274193548387103),
+                (22.725806451612812, 229.17741935483869),
+                (193.04838709677409, 136.2741935483871),
+                (184.01612903225794, 240.79032258064515),
+                (176.27419354838702, 416.27419354838707),
+                (182.72580645161281, 532.40322580645159),
+                (304.01612903225799, 154.33870967741936),
+                (298.85483870967732, 261.43548387096769),
+                (292.40322580645153, 405.95161290322585),
+                (287.24193548387086, 513.04838709677415),
+                (31.758064516128911, 186.59677419354838),
+                (21.435483870967573, 305.30645161290317),
+                (189.17741935483861, 216.2741935483871),
+                (185.30645161290312, 322.08064516129036),
+                (180.14516129032251, 496.27419354838707),
+                (180.14516129032251, 609.82258064516122),
+                (305.30645161290317, 226.59677419354838),
+                (294.98387096774184, 327.24193548387098),
+                (289.82258064516122, 478.20967741935476),
+                (297.5645161290322, 587.88709677419354),
+                (113.04838709677409, 205.95161290322582),
+                (105.30645161290312, 307.88709677419354),
+                (249.82258064516122, 214.98387096774192),
+                (242.08064516129025, 320.79032258064512),
+                (243.37096774193537, 484.66129032258061),
+                (242.08064516129025, 596.91935483870964),
+                (349.17741935483866, 226.59677419354838),
+                (344.01612903225799, 327.24193548387098),
+                (337.5645161290322, 475.62903225806451),
+                (338.85483870967732, 573.69354838709671)
+            ]
 
             for j in range(10):
-                print "Touch point: " + str(j+1)
-                if gs_id == 1:
-                    point = self.getCoord(gs1_list[0])
-                elif gs_id == 2:
-                    point = self.getCoord(gs2_list[0])
+                # print "Touch point: " + str(j+1)
+                # if gs_id == 1:
+                #     point = self.getCoord(gs1_list[0])
+                # elif gs_id == 2:
+                #     point = self.getCoord(gs2_list[0])
+                point = gs_point_list[j*i+j]
+                print point
                 mc.append((point, gs_id, gripper_state, point_list[j][0], point_list[j][1], point_list[j][2]))
 
         return mc
@@ -124,21 +159,22 @@ class PosCalib():
             return dif/n # This number is the average distance between estimations and real points
 
         # As optimization problem
-        x0 = (0.1, .0, 0.07, .001, .0, .0)
+        x0 = (0.1, .0, 0.07, .001, -32.0, 16.0, 13.0)
         bounds = [
             (0, 1),
             (-.5, .5),
             (0, 1),
             (-.5, .5),
             (-500, 500),
+            (-30, 30),
             (-30, 30)
         ]
-        res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
-        # res = minimize(eq_sys, x0, options={'xtol': 1e-8, 'disp': True})
+        # res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
+        res = minimize(eq_sys, x0, method='Nelder-Mead', options={'xtol': 1e-8, 'disp': True})
         print res
-        (k1, k2, l1, l2, dh, dv) = res.x
+        (k1, k2, l1, l2, dx, dy, dz) = res.x
 
-        return [k1, k2, l1, l2, dh, dv]
+        return [k1, k2, l1, l2, dx, dy, dz]
 
     def test(self, point, path, num, params):
         cart, gs1_list, gs2_list, wsg_list = self.get_contact_info(path, num)
@@ -146,8 +182,8 @@ class PosCalib():
         gripper_state = {}
         gripper_state['pos'] = cart[0:3]
         gripper_state['quaternion'] = cart[-4:]
-        gripper_state['Dh'] = wsg_list[0]['width']
-        gripper_state['Dv'] = 139.8 + 72.5 + 160  # Base + wsg + finger
+        gripper_state['Dx'] = wsg_list[0]['width']
+        gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
 
         point_wb = pxb_2_wb(point, 1, gripper_state, params)
         return point_wb
@@ -159,9 +195,21 @@ if __name__ == "__main__":
 
     cts = pc.get_px2mm_params()
 
-    # cts = [0.083553239586688935, 1.2890186744400053e-06, 0.05986013359232522, -0.00017069733889997396, 0.0053275523201169071, -0.001310254063738562]
+    # cts = [0.10108718739186785, 9.1326681282623649e-07, 0.069912803662050549, -0.00020704175861601878, -32, 16, 13]
 
     print cts
+
     point = (0, 320)
     point_wb = pc.test(point, path, 2, cts)
     print point_wb
+    dif = point_wb - (487, 605, 386)
+    print dif
+    print np.linalg.norm(dif)
+
+
+    point = (242.08064516129025, 320.79032258064512)
+    point_wb = pc.test(point, path, 2, cts)
+    print point_wb
+    dif = point_wb - (487, 605, 386-20)
+    print dif
+    print np.linalg.norm(dif)
