@@ -43,11 +43,11 @@ def pxb_2_wb(point, gs_id, gripper_state, fitting_params):
     k1, k2, l1, l2, dx, dy, dz = fitting_params
 
     p1 = (x, y - 640.0/2)
-    p2 = (p1[0]*(k1 + k2*p1[1]**2), p1[1]*(l1 + l2*p1[0]))
+    p2 = (p1[0]*(k1 + k2*p1[1]**2), p1[1]*(l1 + l2*p1[0]**2))
     p3 = (float(normal*(Dx + dx)), float(p2[1] + dy), float(Dz + dz + p2[0]))
     p4 = __grb2wb(point=p3, gripper_pos=pos, quaternion=quaternion)
-    #print "p1: " + str(p1)
-    #print "p2: " + str(p2)
-    #print "p3: " + str(p3)
-    #print "p4: " + str(p4)
+    # print "p1: " + str(p1)
+    # print "p2: " + str(p2)
+    # print "p3: " + str(p3)
+    # print "p4: " + str(p4)
     return p4

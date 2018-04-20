@@ -44,7 +44,6 @@ class DataCollector():
             data_dict['force_finger0'] = ws50message.force_finger0
             data_dict['force_finger1'] = ws50message.force_finger1
             self.data_recorded[key] = data_dict
-            print data_dict
             # print "Total Force: " + str(data_dict['force'])
             # print "Finger 1: " + str(data_dict['force_finger0']
             # print "Finger 2: " + str(data_dict['force_finger1']
@@ -101,6 +100,8 @@ class DataCollector():
         self.data_recorded = {}
         self.subscribers = {}
 
+        rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
+
         for key in self.topic_dict:
             print key
             topic = self.topic_dict[key]['topic']
@@ -122,7 +123,7 @@ if __name__ == "__main__":
     print cart[0:3]
     print cart[-4:]
 
-    rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
+    #rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
     dc.get_data(get_cart=False, get_gs1=False, get_gs2=False, get_wsg=True, save=False, directory='', iteration=0)
 
     print dc.data_recorded
