@@ -78,9 +78,9 @@ class PosCalib():
         ]
         point_list = []
         for elem in image_list:
-            x = 487.56 - 7.3 + elem[0]
-            y = 605.05
-            z = 828.7 + 11.12 - elem[1] - (250+72.5+139.8)  # We substract the mesuring tool
+            x = 485.39 + elem[1]
+            y = 607.03
+            z = 378.3 - elem[0] # - (250+72.5+139.8)  # We substract the mesuring tool
             point_list.append((x, y, z))
         return point_list
 
@@ -97,7 +97,7 @@ class PosCalib():
             gripper_state = {}
             gripper_state['pos'] = cart[0:3]
             gripper_state['quaternion'] = cart[-4:]
-            gripper_state['Dx'] = wsg_list[0]['width']
+            gripper_state['Dx'] = wsg_list[0]['width']/2.0
             gripper_state['Dz'] = 139.8 + 72.5 + 160 # Base + wsg + finger
 
             gs_point_list = [
@@ -165,9 +165,9 @@ class PosCalib():
             (-.5, .5),
             (0, 1),
             (-.5, .5),
-            (-500, 500),
-            (-30, 30),
-            (-30, 30)
+            (-50, 50),
+            (-50, 50),
+            (-50, 50)
         ]
         # res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
         res = minimize(eq_sys, x0, method='Nelder-Mead', options={'xtol': 1e-8, 'disp': True})
@@ -182,7 +182,7 @@ class PosCalib():
         gripper_state = {}
         gripper_state['pos'] = cart[0:3]
         gripper_state['quaternion'] = cart[-4:]
-        gripper_state['Dx'] = wsg_list[0]['width']
+        gripper_state['Dx'] = wsg_list[0]['width']/2.0
         gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
 
         point_wb = pxb_2_wb(point, 1, gripper_state, params)
@@ -195,7 +195,8 @@ if __name__ == "__main__":
 
     cts = pc.get_px2mm_params()
 
-    # cts = [0.10108718739186785, 9.1326681282623649e-07, 0.069912803662050549, -0.00020704175861601878, -32, 16, 13]
+    #cts = [0.070278739910205668, -2.892043425399342e-08, -0.048533406007308946, -3.1917891601505516e-05, -75.006081343534504, 3.2693008903677541, 15.132586202095485]
+
 
     print cts
 
@@ -210,6 +211,6 @@ if __name__ == "__main__":
     point = (242.08064516129025, 320.79032258064512)
     point_wb = pc.test(point, path, 2, cts)
     print point_wb
-    dif = point_wb - (487, 605, 386-20)
+    dif = point_wb - (485+7.3, 607, 378.3-11.12)
     print dif
     print np.linalg.norm(dif)

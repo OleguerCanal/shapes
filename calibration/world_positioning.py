@@ -22,10 +22,10 @@ def __quaternion_matrix(quaternion):
 def __grb2wb(point, gripper_pos, quaternion):
     w2gr_mat = __quaternion_matrix(quaternion)
     v = (point[0], point[1], point[2], 1.0)
-    print "v in gripper base: " + str(v)
+    #print "v in gripper base: " + str(v)
     v = w2gr_mat.dot(v)
-    print "v in world base: " + str(v)
-    print "Gripper pos: " + str(gripper_pos*1000)
+    #print "v in world base: " + str(v)
+    #print "Gripper pos: " + str(gripper_pos*1000)
     return v[0:3] + 1000*gripper_pos
 
 def pxb_2_wb(point, gs_id, gripper_state, fitting_params):
@@ -46,8 +46,8 @@ def pxb_2_wb(point, gs_id, gripper_state, fitting_params):
     p2 = (p1[0]*(k1 + k2*p1[1]**2), p1[1]*(l1 + l2*p1[0]))
     p3 = (float(normal*(Dx + dx)), float(p2[1] + dy), float(Dz + dz + p2[0]))
     p4 = __grb2wb(point=p3, gripper_pos=pos, quaternion=quaternion)
-    print "p1: " + str(p1)
-    print "p2: " + str(p2)
-    print "p3: " + str(p3)
-    print "p4: " + str(p4)
+    #print "p1: " + str(p1)
+    #print "p2: " + str(p2)
+    #print "p3: " + str(p3)
+    #print "p4: " + str(p4)
     return p4
