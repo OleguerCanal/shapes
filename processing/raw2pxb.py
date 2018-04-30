@@ -106,7 +106,7 @@ class RAW2PXB():
     def resize_image(self, img, factor):
         return cv2.resize(img, (0, 0), fx=factor, fy=factor)
 
-    def multiple_image_processing(self, gel_id, img_back, img_list, force_list, layer_var=50, max_f_offset=100):
+    def multiple_image_processing(self, gel_id, img_back, img_list, force_list, layer_var=50, max_f_offset=100, compress_factor=0.2):
         def get_heights():
             m = (205-max_f_offset)/max(force_list)
             heights = []
@@ -130,7 +130,7 @@ class RAW2PXB():
             base_layer = add_layer(base_layer, no_back, height, layer_var)
 
         blur = cv2.GaussianBlur(base_layer, (5, 5), 50)
-        blur = self.resize_image(blur, 0.2)
+        blur = self.resize_image(blur, compress_factor)
         return blur
         # return cv2.flip(blur, 1)
 

@@ -9,26 +9,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 from numpy.linalg import inv
 
-def cout(cart, wsg):
-    x = []
-    for i in range(3):
-        x.append(100*cart[i])
-
-    print x
-    print cart[-4:]
-    print wsg['width']
-
-def get_cart(path):
-    cart = np.load(path)
-    a = cart[3]
-    cart[3] = cart[6]
-    b = cart[4]
-    cart[4] = a
-    c = cart[5]
-    cart[5] = b
-    cart[6] = c
-    return cart
-
 def load_obj(path):
     with open(path, 'rb') as f:
         return pickle.load(f)
@@ -81,20 +61,16 @@ def stitch_pointclouds(fixed, moved):
 
 if __name__ == "__main__":
     directory = 'datasets/stitching_dataset'
+    directory = 'datasets/pos_calibration_squares'
 
     global_pointcloud = None
     processed_global_pointcloud = None
     for i in range(3):
         print "Processing img " + str(i) + "..."
         exp = str(i)
-        cart = get_cart(directory + '/p_' + exp + '/cart.npy')
-        wsg = load_obj(directory + '/p_' + exp + '/wsg_1.pkl')
         loc = Location()
         local_pointcloud = loc.get_local_pointcloud(
             gs_id=1,
-            loc=cart,
-            opening=wsg['width'],
-            from_heightmap=True,
             directory=directory,
             num=i)
 

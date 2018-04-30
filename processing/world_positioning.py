@@ -30,7 +30,6 @@ def __grb2wb(point, gripper_pos, quaternion):
     # for i in range(3):
     #     gripper_pos[i] = gripper_pos[i]*1000
     # return v[0:3] + gripper_pos
-
     return v[0:3] + 1000*gripper_pos
 
 def pxb_2_wb(point, gs_id, gripper_state, fitting_params):
@@ -47,11 +46,41 @@ def pxb_2_wb(point, gs_id, gripper_state, fitting_params):
 
     # k0, k1, k2, l0, l1, l2, dx, dy, dz = fitting_params
     k1, k2,  l1, l2,  dx, dy, dz = fitting_params
+    # k1, k2,  l1, l2 = 7.79474020e-02, -1.69925499e-03, -6.67926496e-02, 7.24325417e-04
+    # dx, dy, dz = fitting_params
 
     p1 = (x, y - 640.0/2)
     # p2 = (p1[0]*k1 + p1[1]*k2 + k0*p1[0]*p1[1], p1[1]*l1 + p1[0]*l2 + l0*p1[0]*p1[1])
     p2 = (p1[0]*k1 + p1[1]*k2, p1[1]*l1 + p1[0]*l2)
     p3 = (normal*(Dx + dx), p2[1] + dy, Dz + dz + p2[0])
+    p4 = __grb2wb(point=p3, gripper_pos=pos, quaternion=quaternion)
+    # print "p1: " + str(p1)
+    # print "p2: " + str(p2)
+    # print "p3: " + str(p3)
+    # print "p4: " + str(p4)
+    return p4
+
+def pxb_3d_2_wb(point_3d, gs_id, gripper_state, fitting_params):
+    x, y, z = point_3d
+    if gs_id == 1:
+        normal = 1
+    else:
+        normal = -1
+
+    pos = gripper_state['pos']
+    quaternion = gripper_state['quaternion']
+    Dx = gripper_state['Dx'] # Obertura
+    Dz = gripper_state['Dz']
+
+    # k0, k1, k2, l0, l1, l2, dx, dy, dz = fitting_params
+    k1, k2,  l1, l2,  dx, dy, dz = fitting_params
+    # k1, k2,  l1, l2 = 7.79474020e-02, -1.69925499e-03, -6.67926496e-02, 7.24325417e-04
+    # dx, dy, dz = fitting_params
+
+    p1 = (x, y - 640.0/2, z)
+    # p2 = (p1[0]*k1 + p1[1]*k2 + k0*p1[0]*p1[1], p1[1]*l1 + p1[0]*l2 + l0*p1[0]*p1[1])
+    p2 = (p1[0]*k1 + p1[1]*k2, p1[1]*l1 + p1[0]*l2, p1[2])
+    p3 = (normal*(Dx + dx - p2[2]), p2[1] + dy, Dz + dz + p2[0])
     p4 = __grb2wb(point=p3, gripper_pos=pos, quaternion=quaternion)
     # print "p1: " + str(p1)
     # print "p2: " + str(p2)

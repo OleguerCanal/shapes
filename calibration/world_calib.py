@@ -120,7 +120,10 @@ class PosCalib():
             point_list.append((x, y, z))
 
         for i in range(6):
-            point_list.append((1169.7, 254.69, 427.71))
+            # point_list.append((1169.7, 254.69, 427.71))
+            dx = 1 + 109.0/2
+            dz = 139.8 + 72.5 + 160
+            point_list.append((1233.21+dx, 254.69, 923.12-dz - 33.11))
 
         return point_list
 
@@ -162,28 +165,28 @@ class PosCalib():
     def __gather_points_pairs(self):
         self.mc = []
 
-        path = 'pos_calibration/pos_calibration_squares'
-        gs_id = 1
-        for i in range(3):
-            cart, gs1_list, gs2_list, wsg_list = self.get_contact_info(path, i)
-
-            gripper_state = {}
-            gripper_state['pos'] = cart[0:3]
-            gripper_state['quaternion'] = cart[-4:]
-            gripper_state['Dx'] = wsg_list[0]['width']/2.0
-            gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
-
-            print gripper_state
-
-            for j in range(10):
-                # print "Touch point: " + str(j+1)
-                # if gs_id == 1:
-                #     point = self.getCoord(gs1_list[0])
-                # elif gs_id == 2:
-                #     point = self.getCoord(gs2_list[0])
-                point = self.gs_point_list[10*i+j]
-                # print point
-                self.mc.append((point, gs_id, gripper_state, self.point_list[j][0], self.point_list[j][1], self.point_list[j][2]))
+        # path = 'pos_calibration/pos_calibration_squares'
+        # gs_id = 1
+        # for i in range(3):
+        #     cart, gs1_list, gs2_list, wsg_list = self.get_contact_info(path, i)
+        #
+        #     gripper_state = {}
+        #     gripper_state['pos'] = cart[0:3]
+        #     gripper_state['quaternion'] = cart[-4:]
+        #     gripper_state['Dx'] = wsg_list[0]['width']/2.0
+        #     gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
+        #
+        #     print gripper_state
+        #
+        #     for j in range(10):
+        #         # print "Touch point: " + str(j+1)
+        #         # if gs_id == 1:
+        #         #     point = self.getCoord(gs1_list[0])
+        #         # elif gs_id == 2:
+        #         #     point = self.getCoord(gs2_list[0])
+        #         point = self.gs_point_list[10*i+j]
+        #         # print point
+        #         self.mc.append((point, gs_id, gripper_state, self.point_list[j][0], self.point_list[j][1], self.point_list[j][2]))
 
         path = 'pos_calibration/pos_calibration_line'
         gs_id = 1
@@ -199,13 +202,13 @@ class PosCalib():
             print gripper_state
 
             for j in range(1):
-                # print "Touch point: " + str(j+1)
-                # if gs_id == 1:
-                #     point = self.getCoord(gs1_list[0])
-                # elif gs_id == 2:
-                #     point = self.getCoord(gs2_list[0])
-                point = self.gs_point_list[30+i]
-                # print str(point) + ","
+                print "Touch point: " + str(j+1)
+                if gs_id == 1:
+                    point = self.getCoord(gs1_list[0])
+                elif gs_id == 2:
+                    point = self.getCoord(gs2_list[0])
+                print str(point) + ","
+                # point = self.gs_point_list[30+i]
                 self.mc.append((point, gs_id, gripper_state, self.point_list[10+i][0], self.point_list[10+i][1], self.point_list[10+i][2]))
 
         return self.mc
@@ -228,20 +231,21 @@ class PosCalib():
 
         # As optimization problem
         # x0 = (.0, 0.1, .0,   .0, 0.07, .0,   1.4, -.24, -1.2)
-        x0 = (0.1, .0,  -0.065, .0,   2.5, -1.35, -0.25)
-        bounds = [
-            (-2, 2),
-            (0, 1),
-            (-.5, .5),
-
-            (-2, 2),
-            (0, 1),
-            (-.5, .5),
-
-            (-50, 50),
-            (-50, 50),
-            (-50, 50)
-        ]
+        x0 = (0.1, .0,  0.065, .0,   2.5, -1.35, -0.25)
+        # x0 = (2.0, 0.2, 13.0)
+        # bounds = [
+        #     (-2, 2),
+        #     (0, 1),
+        #     (-.5, .5),
+        #
+        #     (-2, 2),
+        #     (0, 1),
+        #     (-.5, .5),
+        #
+        #     (-50, 50),
+        #     (-50, 50),
+        #     (-50, 50)
+        # ]
         # res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
         res = minimize(eq_sys, x0, method='Nelder-Mead', options={'xtol': 1e-8, 'disp': True})
         print "Success: " + str(res.success)
@@ -268,9 +272,10 @@ class PosCalib():
         for (point, gs_id, gripper_state, fx, fy, fz) in self.mc:
             i += 1
             (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
-            print (fp_x-fx, fp_y-fy, fp_z-fz)
-            # print fx, fy, fz
-            print np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
+            print "Real: " + str((fx, fy, fz))
+            print "Guessed: " + str((fp_x, fp_y, fp_z))
+            print "Diference: " + str((fp_x-fx, fp_y-fy, fp_z-fz))
+            print "Distance: " + str(np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz)))
             if i%10 == 0:
                 print "*****"
 
@@ -314,9 +319,10 @@ class PosCalib():
         for (point, gs_id, gripper_state, fx, fy, fz) in mc_test:
             i += 1
             (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
-            print (fp_x-fx, fp_y-fy, fp_z-fz)
-            # print fx, fy, fz
-            print np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
+            print "Real: " + str((fx, fy, fz))
+            print "Guessed: " + str((fp_x, fp_y, fp_z))
+            print "Diference: " + str((fp_x-fx, fp_y-fy, fp_z-fz))
+            print "Distance: " + str(np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz)))
             if i%10 == 0:
                 print "*****"
 
@@ -333,4 +339,4 @@ if __name__ == "__main__":
 
     print cts
     pc.test_all(params=cts)
-    pc.test_new_squares(params=cts)
+    # pc.test_new_squares(params=cts)

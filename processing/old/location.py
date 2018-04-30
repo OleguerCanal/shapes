@@ -1,17 +1,31 @@
 from mpl_toolkits import mplot3d
 import matplotlib.pyplot as plt
 from raw2pxb import RAW2PXB
+from pxb2gsb import PXB2GSB
+from gsb2wb import GSB2WB
 import numpy as np
 from numpy.linalg import inv
 import math, cv2, os, pickle
-from world_positioning import pxb_3d_2_wb
 
 
 class Location():
-    def __init__(self):
-        self.compress_factor = .2
-        self.params_gs1 = [7.79474020e-02, -1.69925499e-03, -6.67926496e-02, 7.24325417e-04, 2, 0.2, 13]
-        pass
+    # This class is to construct pointcloud in world space from:
+    # RAW_GS, POS, Gripper opening
+    def __init__(self, params={}):
+        self.params = params
+        if params == {}:
+            self.params['origin'] = [0, 0, 0]
+            self.params['gripper_point_2_gs_origin'] = 385
+            self.params['max_height'] = 10
+            self.params['compress_factor'] = 0.2
+
+            px2mm_params = {}
+            px2mm_params['gs_height'] = 45.0
+            px2mm_params['gs_width'] = 45.0
+            self.params['px2mm_params'] = px2mm_params
+
+    def set_origin(self, origin):
+        self.params['origin'] = origin
 
     def visualize_pointcloud(self, pointcloud):
         ax = plt.axes(projection='3d')
@@ -42,6 +56,13 @@ class Location():
         plt.gca().invert_xaxis()
         plt.show()
 
+    def translate_pointcloud(self, pointcloud, v):
+        for i in range(len(pointcloud['x'])):
+            pointcloud['x'][i] += v[0]
+            pointcloud['y'][i] += v[1]
+            pointcloud['z'][i] += v[2]
+        return pointcloud
+
     def get_contact_info(self, directory, num):
         def get_cart(path):
             cart = np.load(path)
@@ -57,6 +78,7 @@ class Location():
         def load_obj(path):
             with open(path, 'rb') as f:
                 return pickle.load(f)
+
 
         gs1_back = None
         gs2_back = None
@@ -93,58 +115,47 @@ class Location():
 
         return cart, gs1_list, gs2_list, wsg_list, force_list, gs1_back, gs2_back
 
-    def get_local_pointcloud(self, gs_id, directory='', num=-1):
-        # 1. We convert the raw image to height_map data
+    def get_local_pointcloud(self, gs_id, loc, opening, gs_img=None, gs_back=None, from_heightmap=False, directory='', num=-1):
+        # 1. We convert the raw image to pixel_base data
         r2p = RAW2PXB()
-        cart, gs1_list, gs2_list, wsg_list, force_list, gs1_back, gs2_back = self.get_contact_info(directory, num)
-        if gs_id == 1:
-            height_map = r2p.multiple_image_processing(
-                gel_id=gs_id,
-                img_back=gs1_back,
-                img_list=gs1_list,
-                force_list=force_list,
-                compress_factor=self.compress_factor)
-            # r2p.show_2images(gs1_list[0][:-80, 40:-50], height_map)
-        elif gs_id == 2:
-            height_map = r2p.multiple_image_processing(
-                gel_id=gs_id,
-                img_back=gs2_back,
-                img_list=gs2_list,
-                force_list=force_list,
-                compress_factor=self.compress_factor)
-            # r2p.show_image(img=height_map)
+        if from_heightmap is False:
+            height_map = r2p.crop_contact(gs_back, gs_img, gel_id=gs_id, compress_factor=self.params['compress_factor'])
+        else:
+            cart, gs1_list, gs2_list, wsg_list, force_list, gs1_back, gs2_back = self.get_contact_info(directory, num)
+            if gs_id == 1:
+                height_map = r2p.multiple_image_processing(
+                    gel_id=gs_id,
+                    img_back=gs1_back,
+                    img_list=gs1_list,
+                    force_list=force_list)
+                # r2p.show_2images(gs1_list[0][:-80, 40:-50], height_map)
+            elif gs_id == 2:
+                height_map = r2p.multiple_image_processing(
+                    gel_id=gs_id,
+                    img_back=gs2_back,
+                    img_list=gs2_list,
+                    force_list=force_list)
+                # r2p.show_image(img=height_map)
 
-        # 2. We convert height_map data into world position
-        gripper_state = {}
-        gripper_state['pos'] = cart[0:3]
-        gripper_state['quaternion'] = cart[-4:]
-        gripper_state['Dx'] = wsg_list[0]['width']/2.0
-        gripper_state['Dz'] = 139.8 + 72.5 + 160 # Base + wsg + finger
+        self.params['px2mm_params']['img_height'] = height_map.shape[0]
+        self.params['px2mm_params']['img_width'] = height_map.shape[1]
 
-        xs = []
-        ys = []
-        zs = []
-        for i in range(height_map.shape[0]):
-            for j in range(height_map.shape[1]):
-                if(height_map[i][j] != 0):
-                    ii = i/self.compress_factor
-                    jj = j/self.compress_factor
-                    world_point = pxb_3d_2_wb(
-                        point_3d=(ii, jj, float(2.0*height_map[i][j])/250),
-                        gs_id=gs_id,
-                        gripper_state = gripper_state,
-                        fitting_params = self.params_gs1
-                    )
-                    xs.append(world_point[0])
-                    ys.append(world_point[1])
-                    zs.append(world_point[2])
+        # 2. We convert pixel_base data into a gs_base pointcloud
+        pxb2gsb = PXB2GSB()
+        gsb_pointcloud = pxb2gsb.get_gsb_pointcloud(height_map, self.params['px2mm_params'], opening, gs_id=gs_id, max_height=3)
 
-        pointcloud = {}
-        pointcloud['x'] = xs
-        pointcloud['y'] = ys
-        pointcloud['z'] = zs
 
-        return pointcloud
+        # 3. We convert gs_base pointcloud to world_base pointcloud
+        quaternion = loc[-4:]
+        gsb2wb = GSB2WB()
+        wb_pointcloud = gsb2wb.get_wb_pointcloud(gsb_pointcloud, quaternion, self.params['gripper_point_2_gs_origin'])
+
+        # 4. We apply the translation with reference to the origin
+        v = [0, 0, 0]
+        for i in range(3):
+            v[i] = 1000*loc[i] - self.params['origin'][i]
+        local_pointcloud = self.translate_pointcloud(wb_pointcloud, v)
+        return local_pointcloud
 
     def merge_pointclouds(self, pointcloud1, pointcloud2):
         pointcloud1['x'] += pointcloud2['x']
