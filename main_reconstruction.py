@@ -55,17 +55,11 @@ def stitch_pointclouds(fixed, moved):
     # pointcloud = npPC2dictPC(pc.pc_data)
     return pc.pc_data
 
-
-if __name__ == "__main__":
-    directory = 'datasets/stitching_dataset'
-    # directory = 'datasets/pos_calibration_squares'
-
-    global_pointcloud = None
-    processed_global_pointcloud = None
-    for i in range(6):
+def get_global_pointcloud(directory, touches, global_pointcloud, processed_global_pointcloud):
+    loc = Location()
+    for i in touches:
         print "Processing img " + str(i) + "..."
         exp = str(i)
-        loc = Location()
         local_pointcloud = loc.get_local_pointcloud(
             gs_id=1,
             directory=directory,
@@ -80,12 +74,50 @@ if __name__ == "__main__":
             global_pointcloud = loc.merge_pointclouds(global_pointcloud, local_pointcloud)
             processed_global_pointcloud = stitch_pointclouds(processed_global_pointcloud, local_pointcloud_arr)
 
-        # print(type(processed_global_pointcloud))
-        # loc.visualize_pointcloud(local_pointcloud)
-        # loc.visualize_pointcloud(global_pointcloud)
-        # loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
+    # loc.visualize_pointcloud(global_pointcloud)
+    # loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))
 
-    print "DONE :)"
+    return global_pointcloud, processed_global_pointcloud
 
+if __name__ == "__main__":
+    global_pointcloud = None
+    processed_global_pointcloud = None
+
+    # global_pointcloud, processed_global_pointcloud = get_global_pointcloud(
+    #     directory='datasets/stitching_dataset',
+    #     touches=[2, 3, 4],
+    #     global_pointcloud=global_pointcloud,
+    #     processed_global_pointcloud=processed_global_pointcloud
+    # )
+
+    # global_pointcloud, processed_global_pointcloud = get_global_pointcloud(
+    #     directory='datasets/pos_calibration_squares',
+    #     touches=[2, 3, 4],
+    #     global_pointcloud=global_pointcloud,
+    #     processed_global_pointcloud=processed_global_pointcloud
+    # )
+
+    global_pointcloud, processed_global_pointcloud = get_global_pointcloud(
+        directory='datasets/demo_video_1',
+        touches=range(2),
+        global_pointcloud=global_pointcloud,
+        processed_global_pointcloud=processed_global_pointcloud
+    )
+
+    # global_pointcloud, processed_global_pointcloud = get_global_pointcloud(
+    #     directory='datasets/demo_video_1_side',
+    #     touches=range(1),
+    #     global_pointcloud=global_pointcloud,
+    #     processed_global_pointcloud=processed_global_pointcloud
+    # )
+
+    # global_pointcloud, processed_global_pointcloud = get_global_pointcloud(
+    #     directory='datasets/demo_video_1_back',
+    #     touches=range(3),
+    #     global_pointcloud=global_pointcloud,
+    #     processed_global_pointcloud=processed_global_pointcloud
+    # )
+
+    loc = Location()
     loc.visualize_pointcloud(global_pointcloud)
     loc.visualize_pointcloud(npPC2dictPC(processed_global_pointcloud))

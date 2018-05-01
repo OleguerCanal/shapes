@@ -104,6 +104,8 @@ class PosCalib():
         # Solve optimization problem
         # x0 = (.0, 0.1, .0,   .0, 0.07, .0,   1.4, -.24, -1.2)
         x0 = (0, 0,   0, 0,   0, 0, 0)
+        x0 = (2, 3,   5, 0,   10, 20, -30)
+        x0 = (0.0792, -0.0018, -0.0697, -0.0021, 6.4471, 5.9929, 14.3968)
         # x0 = (2.0, 0.2, 13.0)
 
         # res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
@@ -142,7 +144,7 @@ if __name__ == "__main__":
 
 
     for elem in cts:
-        print("%.2f" % elem)
+        print("%.4f" % elem)
 
-    pc.test_all(params=cts)
+    # pc.test_all(params=cts)
     # pc.test_new_squares(params=cts)
