@@ -21,8 +21,11 @@ class Location():
             c=pointcloud['y'], cmap='Blues')
 
         # Set viewpoint.
-        ax.azim = 135
-        ax.elev = 15
+        # ax.azim = 135
+        # ax.elev = 15
+        ax.azim = -108
+        ax.elev = 43
+
 
         # Label axes.
         ax.set_xlabel('x (mm)')
@@ -39,7 +42,6 @@ class Location():
                 getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
 
         axisEqual3D(ax)
-        plt.gca().invert_xaxis()
         plt.show()
 
     def get_contact_info(self, directory, num):
