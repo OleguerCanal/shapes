@@ -9,7 +9,6 @@ import os, pickle
 class PosCalib():
     def __init__(self):
         self.point = ()
-        self.point_list = self.__get_point_list()
         self.gs_point_list = [
             # SQUARES
             (31.758064516128911, 96.274193548387103),
@@ -88,103 +87,41 @@ class PosCalib():
             (369.82258064516122, 243.37096774193546)]
 
     def get_px2mm_params(self):
-        self.mc = self.__gather_points_pairs()
-        # for elem in mc:
-        #     print elem
+        squares = np.load('pos_calibration/squares.npy').tolist()
+        border = np.load('pos_calibration/border.npy').tolist()
+        line = np.load('pos_calibration/line.npy').tolist()
+        self.mc = squares + border + line
 
         def eq_sys(params):
             dif = 0
             n = len(self.mc)
-            self.difs = []
-            for (point, gs_id, gripper_state, fx, fy, fz) in self.mc:
-                (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
+            for (gs_point, gs_id, gripper_state, real_point) in self.mc:
+                fx, fy, fz = real_point
+                (fp_x, fp_y, fp_z) = pxb_2_wb(gs_point, gs_id, gripper_state, params)
                 dif += np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
-                self.difs.append((fp_x-fx, fp_y-fy, fp_z-fz))
             return dif/n  # This number is the average distance between estimations and real points
 
-        # As optimization problem
+        # Solve optimization problem
         # x0 = (.0, 0.1, .0,   .0, 0.07, .0,   1.4, -.24, -1.2)
-        x0 = (0.1, .0,  0.065, .0,   2.5, -1.35, -0.25)
+        x0 = (0, 0,   0, 0,   0, 0, 0)
         # x0 = (2.0, 0.2, 13.0)
 
         # res = minimize(eq_sys, x0, bounds=bounds, options={'xtol': 1e-8, 'disp': False})
         res = minimize(eq_sys, x0, method='Nelder-Mead', options={'xtol': 1e-8, 'disp': True})
         print "Success: " + str(res.success)
         print "Average distance: " + str(res.fun)
-        
+
         return res.x
 
-    def test(self, point, path, num, params):
-        cart, gs1_list, gs2_list, wsg_list = self.get_contact_info(path, num)
-
-        gripper_state = {}
-        gripper_state['pos'] = cart[0:3]
-        gripper_state['quaternion'] = cart[-4:]
-        gripper_state['Dx'] = wsg_list[0]['width']/2.0
-        gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
-
-        point_wb = pxb_2_wb(point, 1, gripper_state, params)
-        return point_wb
-
     def test_all(self, params):
-        i = 0
-        for (point, gs_id, gripper_state, fx, fy, fz) in self.mc:
-            i += 1
-            (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
-            print "Real: " + str((fx, fy, fz))
-            print "Guessed: " + str((fp_x, fp_y, fp_z))
-            print "Diference: " + str((fp_x-fx, fp_y-fy, fp_z-fz))
-            print "Distance: " + str(np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz)))
-            if i%10 == 0:
-                print "*****"
-
-    def test_new_squares(self, params):
-        mc_test = []
-
-        test_gs_point_list = [
-            (102.72580645161281, 409.82258064516122),
-            (114.33870967741922, 522.08064516129025),
-            (243.37096774193537, 125.95161290322579),
-            (239.49999999999989, 227.88709677419357),
-            (242.08064516129025, 387.88709677419354),
-            (248.53225806451604, 500.14516129032256),
-            (333.69354838709671, 137.56451612903226),
-            (337.5645161290322, 235.62903225806454),
-            (340.14516129032251, 371.11290322580646),
-            (353.04838709677415, 475.62903225806451)
-        ]
-
-        path = 'pos_calibration/pos_calibration_squares'
-        gs_id = 1
-        i = 3
-        cart, gs1_list, gs2_list, wsg_list = self.get_contact_info(path, i)
-
-        gripper_state = {}
-        gripper_state['pos'] = cart[0:3]
-        gripper_state['quaternion'] = cart[-4:]
-        gripper_state['Dx'] = wsg_list[0]['width']/2.0
-        gripper_state['Dz'] = 139.8 + 72.5 + 160  # Base + wsg + finger
-
-        for j in range(10):
-            if gs_id == 1:
-                point = self.getCoord(gs1_list[0])
-            elif gs_id == 2:
-                point = self.getCoord(gs2_list[0])
-            print point
-            # point = test_gs_point_list[j]
-            mc_test.append((point, gs_id, gripper_state, self.point_list[j][0], self.point_list[j][1], self.point_list[j][2]))
-
-        i = 0
-        for (point, gs_id, gripper_state, fx, fy, fz) in mc_test:
-            i += 1
+        for (point, gs_id, gripper_state, real_point) in self.mc:
+            fx, fy, fz = real_point
             (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
             print "Real: " + str((fx, fy, fz))
             print "Guessed: " + str((fp_x, fp_y, fp_z))
             print "Diference: " + str((fp_x-fx, fp_y-fy, fp_z-fz))
             print "Distance: " + str(np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz)))
             print "*****"
-
-
 
 
 if __name__ == "__main__":
@@ -194,9 +131,18 @@ if __name__ == "__main__":
     cts = pc.get_px2mm_params()
 
     # cts = [-5.31736713e-04, 1.32689988e-01, 1.92324850e-01, 4.93343916e-04, -2.60680326e-01,  2.58946303e-02,   1.18242193e+02, 2.69041742e-01, -1.72261820e+00]
+# 0.08
+# -0.00
+# -0.07
+# -0.00
+# 6.44
+# 6.28
+# 14.41
+
+
 
     for elem in cts:
         print("%.2f" % elem)
 
-    # pc.test_all(params=cts)
-    pc.test_new_squares(params=cts)
+    pc.test_all(params=cts)
+    # pc.test_new_squares(params=cts)

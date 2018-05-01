@@ -10,7 +10,7 @@ from world_positioning import pxb_3d_2_wb
 class Location():
     def __init__(self):
         self.compress_factor = .2
-        self.params_gs1 = [7.79474020e-02, -1.69925499e-03, -6.67926496e-02, 7.24325417e-04, 2, 0.2, 13]
+        self.params_gs1 = [0.09, 0, -0.06, 0.02, -0.72, -1.42, 11.6]
         pass
 
     def visualize_pointcloud(self, pointcloud):
@@ -124,13 +124,14 @@ class Location():
         xs = []
         ys = []
         zs = []
+        
         for i in range(height_map.shape[0]):
             for j in range(height_map.shape[1]):
                 if(height_map[i][j] != 0):
-                    ii = i/self.compress_factor
-                    jj = j/self.compress_factor
+                    ii = i*480.0/float(height_map.shape[0])
+                    jj = j*640.0/float(height_map.shape[1])
                     world_point = pxb_3d_2_wb(
-                        point_3d=(ii, jj, float(2.0*height_map[i][j])/250),
+                        point_3d=(ii, jj, float(3.0*height_map[i][j])/250),
                         gs_id=gs_id,
                         gripper_state = gripper_state,
                         fitting_params = self.params_gs1

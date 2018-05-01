@@ -34,9 +34,6 @@ def get_string_pc(pointcloud):
         string += '\n' + str(elem[0]) + ' ' + str(elem[1]) + ' ' + str(elem[2])
     return string
 
-def load_cpl_pointcloud(path):
-    pass
-
 def stitch_pointclouds(fixed, moved):
     # 1. We save the pointclouds in .pcd format
     name = 'processing/c++/cloud' + str(0) + '.pcd'
@@ -61,11 +58,11 @@ def stitch_pointclouds(fixed, moved):
 
 if __name__ == "__main__":
     directory = 'datasets/stitching_dataset'
-    directory = 'datasets/pos_calibration_squares'
+    # directory = 'datasets/pos_calibration_squares'
 
     global_pointcloud = None
     processed_global_pointcloud = None
-    for i in range(3):
+    for i in range(6):
         print "Processing img " + str(i) + "..."
         exp = str(i)
         loc = Location()

@@ -131,8 +131,9 @@ class RAW2PXB():
 
         blur = cv2.GaussianBlur(base_layer, (5, 5), 50)
         blur = self.resize_image(blur, compress_factor)
-        return blur
-        # return cv2.flip(blur, 1)
+        # return blur
+        # self.show_image(blur)
+        return cv2.flip(blur, 1)
 
 if __name__ == "__main__":
     gs = cv2.imread('sample_data/GS1_2.png')

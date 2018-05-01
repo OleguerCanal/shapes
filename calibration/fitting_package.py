@@ -9,14 +9,20 @@ class fittingPackage():
 
     def __getCoord(self, img):
         fig = plt.figure()
-        # img = cv2.flip(img, 1)  # We horizontally flip the image
+        img = cv2.flip(img, 1)  # We horizontally flip the image
         plt.imshow(img)
         cid = fig.canvas.mpl_connect('button_press_event', self.__onclick__)
+        cid2 = fig.canvas.mpl_connect('scroll_event', self.__onscroll__)
         plt.show()
         return (self.point[1], self.point[0])  # Fix axis values
 
     def __onclick__(self, click):
         self.point = (click.xdata, click.ydata)
+        plt.close('all')
+        return self.point
+
+    def __onscroll__(self, click):
+        self.point = (-1, -1)
         plt.close('all')
         return self.point
 
@@ -60,12 +66,14 @@ class fittingPackage():
             squares_distance = [
                 (.0, .0),
                 (.0, 7.3),
-                # (0, 18.5),
-                # (0, 25.38),
+                (.0, 18.5),
+                (.0, 25.38),
+
                 (11.12, 0),
                 (11.12, 7.3),
                 (11.12, 18.5),
                 (11.12, 25.38),
+
                 (20.02, 0),
                 (20.02, 7.3),
                 (20.02, 18.5),
@@ -73,23 +81,31 @@ class fittingPackage():
             ]
             point_list = []
             for elem in squares_distance:
-                x = 480 + elem[1]
-                y = 604
-                z = 377 - elem[0] # - (250+72.5+139.8)  # We substract the mesuring tool
+                x = 480. + elem[1]
+                y = 604.
+                z = 377. - elem[0] # - (250+72.5+139.8)  # We substract the mesuring tool
                 point_list.append((x, y, z))
 
         elif name == "line":
-            point_list = []
-            for i in range(6):
-                point_list.append((1277., 255., 427))
+            point_list = [
+                (1277, 255, 460),
+                (1277, 255, 427)
+            ]
 
         elif name == "border":
-            point_list = []
+            point_list = [
+                (693, 650, 382),
+                (693, 664, 384),
+                (693, 663, 369),
+                (693, 663, 362),
+                (691, 665, 347),
+                (691, 650, 349)
+            ]
 
         return point_list
 
     def create_package(self, name, gs_id, n_points, from_list=False, from_path='', touches_list=[0], save_path=''):
-        real_point_list = get_real_point_list(name=name)
+        real_point_list = self.get_real_point_list(name=name)
 
         mc = []
         for i in touches_list:
@@ -106,23 +122,39 @@ class fittingPackage():
             for j in range(n_points):
                 print "Touch point: " + str(j)
                 if gs_id == 1:
-                    gs_point = self.getCoord(gs1_list[0])
+                    gs_point = self.__getCoord(gs1_list[0])
                 elif gs_id == 2:
-                    gs_point = self.getCoord(gs2_list[0])
-                real_point = real_point_list(j)
+                    gs_point = self.__getCoord(gs2_list[0])
 
-                print "Matched: " + str(gs_point) + " with " + str(real_point)
+                if gs_point != (-1, -1):
+                    real_point = real_point_list[j]
+                    print "Matched: " + str(gs_point) + " with " + str(real_point)
+                    mc.append((gs_point, gs_id, gripper_state, real_point))
+                else:
+                    print "Point cancelled"
 
-                mc.append((gs_point, gs_id, gripper_state, real_point))
-
-        np.save(path + '/' + name + '.npy', mc)
+        np.save(save_path + '/' + name + '.npy', mc)
 
 
 if __name__ == "__main__":
-    name = 'squares'
-    n_points = 12
-    from_path = 'pos_calibration/pos_calibration_squares'
-    touches_list = range(7)
+    # name = 'squares'
+    # n_points = 12
+    # from_path = 'pos_calibration/pos_calibration_squares'
+    # touches_list = range(4)
+    # save_path = 'pos_calibration'
+    # gs_id = 1
+
+    # name = 'border'
+    # n_points = 6
+    # from_path = 'pos_calibration/pos_calibration_border'
+    # touches_list = range(17)
+    # save_path = 'pos_calibration'
+    # gs_id = 1
+
+    name = 'line'
+    n_points = 2
+    from_path = 'pos_calibration/pos_calibration_line'
+    touches_list = range(6)
     save_path = 'pos_calibration'
     gs_id = 1
 
@@ -130,9 +162,9 @@ if __name__ == "__main__":
     fp.create_package(
         name=name,
         gs_id=gs_id,
-        n_points = n_points
+        n_points = n_points,
         from_list=False,
         from_path=from_path,
         touches_list=touches_list,
-        saving_path=save_path
+        save_path=save_path
     )

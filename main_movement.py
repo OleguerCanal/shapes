@@ -4,24 +4,29 @@ from gathering.data_collector import DataCollector
 
 if __name__ == "__main__":
 
-    experiment_name = "datasets/stitching_dataset"
+    experiment_name = "datasets/pos_calibration_border"
     d = 5
     movement_list = [
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0],
-        [-d, 0, 0]
+        [0, -d, 0],
+        [0, -d, 0],
+        [0, -d, 0],
+        [0, -d, 0],
+
+        [0, 0, -d],
+        [0, 0, -d],
+
+        [0, d, 0],
+        [0, d, 0],
+        [0, d, 0],
+        [0, d, 0],
+
+        [0, 0, -d],
+        [0, 0, -d],
+
+        [0, -d, 0],
+        [0, -d, 0],
+        [0, -d, 0],
+        [0, -d, 0]
     ]
 
     cr = ControlRobot()
