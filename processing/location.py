@@ -10,7 +10,7 @@ from world_positioning import pxb_3d_2_wb
 class Location():
     def __init__(self):
         self.compress_factor = .2
-        self.params_gs1 = [0.0792, -0.0018, -0.0697, -0.0021, 6.4471, 5.9929, 14.3968]
+        self.params_gs1 = [0.0503, -0.0026, 0,    -0.0699, -0.0038, 0,   6.5039, 6.4795, 16.713]
         pass
 
     def visualize_pointcloud(self, pointcloud):
