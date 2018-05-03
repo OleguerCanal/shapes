@@ -6,6 +6,7 @@ class Labeller():
     def __init__(self):
         self.ip = ImageProcessing()
         self.params_gs1 = [0.0503, -0.0026, 0,    -0.0699, -0.0038, 0,   6.5039, 6.4795, 16.713]
+        self.real_r = 6.35
 
     def __distance(self, point1, point2):
         x1, y1 = point1
@@ -28,6 +29,9 @@ class Labeller():
         perim_point_mm = self.__get_mm_pos(center + (pixel_r, 0))
         r = self.__distance((c_x, c_y), perim_point_mm)
 
+        if r > self.real_r:
+            print "ERROR: Estimated radius larger than real radius!"
+
         dz_dx_mat = np.zeros(size)
         dz_dy_mat = np.zeros(size)
         for x_pixel in range(n_x):
@@ -36,8 +40,8 @@ class Labeller():
                     x, y = self.__get_mm_pos((x_pixel, y_pixel))
                     x_dif = (x - c_x)
                     y_dif = (y - c_y)
-                    dz_dx = -x_dif/(math.sqrt(r**2 - x_dif**2 - y_dif**2)
-                    dz_dy = -y_dif/(math.sqrt(r**2 - x_dif**2 - y_dif**2)
+                    dz_dx = -x_dif/(math.sqrt(self.real_r**2 - x_dif**2 - y_dif**2)
+                    dz_dy = -y_dif/(math.sqrt(self.real_r**2 - x_dif**2 - y_dif**2)
 
                     dz_dx_mat[x_pixel][y_pixel] = dz_dx
                     dz_dy_mat[x_pixel][y_pixel] = dz_dy
