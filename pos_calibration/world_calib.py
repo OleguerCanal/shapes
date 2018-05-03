@@ -15,17 +15,29 @@ class PosCalib():
         border = np.load('pos_calibration/border.npy').tolist()
         line = np.load('pos_calibration/line.npy').tolist()
         self.mc = squares + border + line
+        n_s = float(len(squares))
+        n_b = float(len(border))
+        n_l = float(len(line))
         # self.mc = border
 
 
         def eq_sys(params):
             dif = 0
             n = len(self.mc)
+            i = 0
             for (gs_point, gs_id, gripper_state, real_point) in self.mc:
+                if i < n_s:
+                    weight = 1/n_s
+                elif i < n_s + n_b:
+                    weight = 1/n_b
+                elif i < n:
+                    weight = 1/n_l
+
+                i += 1
                 fx, fy, fz = real_point
                 (fp_x, fp_y, fp_z) = pxb_2_wb(gs_point, gs_id, gripper_state, params)
-                dif += np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
-            return dif/n  # This number is the average distance between estimations and real points
+                dif += weight*np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
+            return dif  # This number is the average distance between estimations and real points
 
         # Solve optimization problem
         # x0 = (.0, 0.1, .0,   .0, 0.07, .0,   1.4, -.24, -1.2)
@@ -42,6 +54,8 @@ class PosCalib():
         return res.x
 
     def test_all(self, params):
+        dif = 0
+        n = float(len(self.mc))
         for (point, gs_id, gripper_state, real_point) in self.mc:
             fx, fy, fz = real_point
             (fp_x, fp_y, fp_z) = pxb_2_wb(point, gs_id, gripper_state, params)
@@ -50,7 +64,8 @@ class PosCalib():
             print "Diference: " + str((fp_x-fx, fp_y-fy, fp_z-fz))
             print "Distance: " + str(np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz)))
             print "*****"
-
+            dif += np.linalg.norm((fp_x-fx, fp_y-fy, fp_z-fz))
+        print dif/n
 
 if __name__ == "__main__":
     pc = PosCalib()
@@ -72,5 +87,5 @@ if __name__ == "__main__":
     for elem in cts:
         print("%.4f" % elem)
 
-    # pc.test_all(params=cts)
+    pc.test_all(params=cts)
     # pc.test_new_squares(params=cts)
