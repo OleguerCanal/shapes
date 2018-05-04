@@ -17,6 +17,7 @@ import time
 class DataCollector():
     def __init__(self):
         self.bridge = CvBridge()
+        self.it = 0
 
     def __save(self, path, obj, name):
         if not os.path.exists(path): # If the directory does not exist, we create it
@@ -26,6 +27,7 @@ class DataCollector():
 
     def __callback(self, data, key):
         self.subscribers[key].unregister() # Comment to record during indefinite time
+        self.it += 1
         print "#################################################"
         if self.topic_dict[key]['msg_format'] == Image:
             try:
@@ -47,6 +49,7 @@ class DataCollector():
             # print "Total Force: " + str(data_dict['force'])
             # print "Finger 1: " + str(data_dict['force_finger0']
             # print "Finger 2: " + str(data_dict['force_finger1']
+        # self.__save_data(get_gs1=True, get_gs2=False, get_wsg=False, directory='data/', iteration=self.it)
         return
 
     def getCart(self):
@@ -117,13 +120,14 @@ class DataCollector():
 if __name__ == "__main__":
     dc = DataCollector()
     # dc.get_data(get_cart=False, get_gs1=False, get_gs2=False, get_wsg=True, save=False, directory='', iteration=0)
-    # time.sleep(5)
-
-    cart = dc.getCart()
-    print cart[0:3]*1000
-    print cart[-4:]
+    #
+    # cart = dc.getCart()
+    # print cart[0:3]*1000
+    # print cart[-4:]
 
     #rospy.init_node('listener', anonymous=True) # Maybe we should only initialize one general node
-    dc.get_data(get_cart=False, get_gs1=False, get_gs2=False, get_wsg=True, save=False, directory='', iteration=0)
+    # dc.get_data(get_cart=False, get_gs1=False, get_gs2=False, get_wsg=True, save=False, directory='', iteration=0)
+    dc.get_data(get_cart=False, get_gs1=True, get_gs2=False, get_wsg=False, save=False, directory='', iteration=0)
+    time.sleep(2.5)
 
-    print dc.data_recorded
+    # print dc.data_recorded
