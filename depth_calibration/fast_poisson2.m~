@@ -34,7 +34,7 @@ function [img_direct] = fast_poisson2(gx,gy)
 
 	% DST Sine Transform algo starts here
 	f2 = f(2:end-1,2:end-1); 
-	clear f
+	clear f1
 
 	%compute sine transform
 	tt = dst(f2); 
