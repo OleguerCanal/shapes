@@ -99,3 +99,6 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+#Folders to ignore
+depth_calibration/data
